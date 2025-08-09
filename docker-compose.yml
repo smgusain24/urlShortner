@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    container_name: urlshortener_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shortener
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  redis:
+    image: redis:7
+    container_name: urlshortener_redis
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    container_name: urlshortener_app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/shortener
+      BASE_URL: http://localhost:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:
